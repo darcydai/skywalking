@@ -61,6 +61,11 @@ public abstract class ServletRequestInterceptor implements InstanceMethodsAround
     @Override
     public void beforeMethod(EnhancedInstance objInst, Method method, Object[] allArguments, Class<?>[] argumentsTypes,
                              MethodInterceptResult result) throws Throwable {
+        Boolean forwardRequestFlag = (Boolean) ContextManager.getRuntimeContext().get(Constants.FORWARD_REQUEST_FLAG);
+        if (forwardRequestFlag != null && forwardRequestFlag) {
+            return;
+        }
+
         HttpServletRequest request = obtainServletRequest(objInst, method, allArguments, argumentsTypes);
         ContextCarrier contextCarrier = new ContextCarrier();
 
@@ -87,6 +92,10 @@ public abstract class ServletRequestInterceptor implements InstanceMethodsAround
     @Override
     public Object afterMethod(EnhancedInstance objInst, Method method, Object[] allArguments, Class<?>[] argumentsTypes,
                               Object ret) throws Throwable {
+        Boolean forwardRequestFlag = (Boolean) ContextManager.getRuntimeContext().get(Constants.FORWARD_REQUEST_FLAG);
+        if (forwardRequestFlag != null && forwardRequestFlag) {
+            return ret;
+        }
         HttpServletRequest request = obtainServletRequest(objInst, method, allArguments, argumentsTypes);
         HttpServletResponse response = obtainServletResponse(objInst, method, allArguments, argumentsTypes, ret);
 
