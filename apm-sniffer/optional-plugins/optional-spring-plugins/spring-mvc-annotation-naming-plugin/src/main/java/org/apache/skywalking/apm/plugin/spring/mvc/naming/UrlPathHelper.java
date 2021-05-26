@@ -22,13 +22,13 @@ import org.springframework.util.StringUtils;
 
 public class UrlPathHelper {
 
-    public static String getLookupPath(String requestUri, String contextPath, String servletPath, String pathInfo) {
+    public static String getLookupPath(String requestUri, String contextPath, String servletPath) {
         String pathWithinApp = requestUri;
         if (contextPath != null) {
             pathWithinApp = UrlPathHelper.getRemainingPath(requestUri, contextPath, true);
         }
         if (servletPath != null) {
-            String rest = getPathWithinServletMapping(servletPath, pathWithinApp, pathInfo);
+            String rest = getPathWithinServletMapping(servletPath, pathWithinApp);
             return StringUtils.hasLength(rest) ? rest : pathWithinApp;
         }
         return pathWithinApp;
@@ -76,7 +76,7 @@ public class UrlPathHelper {
         }
     }
 
-    public static String getPathWithinServletMapping(String servletPath, String pathWithinApp, String pathInfo) {
+    public static String getPathWithinServletMapping(String servletPath, String pathWithinApp) {
         String sanitizedPathWithinApp = getSanitizedPath(pathWithinApp);
         String path;
         if (servletPath.contains(sanitizedPathWithinApp)) {
@@ -84,19 +84,9 @@ public class UrlPathHelper {
         } else {
             path = getRemainingPath(pathWithinApp, servletPath, false);
         }
-
         if (path != null) {
             return path;
-        } else {
-            if (pathInfo != null) {
-                return pathInfo;
-            } else {
-                path = getRemainingPath(pathWithinApp, servletPath, false);
-                if (path != null) {
-                    return pathWithinApp;
-                }
-                return servletPath;
-            }
         }
+        return pathWithinApp;
     }
 }

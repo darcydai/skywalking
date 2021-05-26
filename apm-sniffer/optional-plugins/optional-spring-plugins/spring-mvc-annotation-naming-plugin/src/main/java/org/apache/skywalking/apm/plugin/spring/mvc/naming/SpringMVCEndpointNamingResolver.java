@@ -47,7 +47,10 @@ public class SpringMVCEndpointNamingResolver implements EndpointNameNamingResolv
         ServiceManager.INSTANCE.findService(EndpointNamingControl.class).addResolver(RESOLVER);
     }
 
-    public static SpringMVCEndpointNamingResolver getResolver() {
+    public synchronized static SpringMVCEndpointNamingResolver getResolver() {
+        if (RESOLVER == null) {
+            bootstrap();
+        }
         return RESOLVER;
     }
 
@@ -56,8 +59,18 @@ public class SpringMVCEndpointNamingResolver implements EndpointNameNamingResolv
 
     private final MultiValueMap<String, SimpleRequestMappingInfo> directPath = new LinkedMultiValueMap<>();
     private final List<SimpleRequestMappingInfo> mappingInfos = new LinkedList<>();
+    private String servletContextPath;
+    private String servletPath;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     public static final String IGNORE_HTTP_STATUS = "404";
+
+    public void setServletContextPath(String servletContextPath) {
+        this.servletContextPath = sanitizePath(servletContextPath);
+    }
+
+    public void setServletPath(String servletPath) {
+        this.servletPath = sanitizePath(servletPath);
+    }
 
     public void addMappingInfo(SimpleRequestMappingInfo info) {
         try {
@@ -103,7 +116,7 @@ public class SpringMVCEndpointNamingResolver implements EndpointNameNamingResolv
             if (IGNORE_HTTP_STATUS.equals(tagsMap.get(Tags.STATUS_CODE))) {
                 return null;
             }
-            String lookupPath = UrlPathHelper.getLookupPath(originName, tagsMap.get(Tags.HTTP.SERVLET_CONTEXT_PATH), tagsMap.get(Tags.HTTP.SERVLET_PATH), tagsMap.get(Tags.HTTP.SERVLET_PATH_INFO));
+            String lookupPath = UrlPathHelper.getLookupPath(originName, servletContextPath, servletPath);
             String method = tagsMap.get(Tags.HTTP.METHOD);
             if (directPath.containsKey(lookupPath)) {
                 for (SimpleRequestMappingInfo info : directPath.get(lookupPath)) {
@@ -123,5 +136,19 @@ public class SpringMVCEndpointNamingResolver implements EndpointNameNamingResolv
         } finally {
             lock.readLock().unlock();
         }
+    }
+
+    private String sanitizePath(String path) {
+        if (path == null || "/*".equals(path) || "/".equals(path)) {
+            return null;
+        }
+        if (path.endsWith("/*")) {
+            path = path.substring(0, path.length() - 2);
+        }
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+            return path;
+        }
+        return path;
     }
 }

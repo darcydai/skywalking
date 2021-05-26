@@ -78,9 +78,6 @@ public abstract class ServletRequestInterceptor implements InstanceMethodsAround
         AbstractSpan span = ContextManager.createEntrySpan(request.getRequestURI(), contextCarrier);
         Tags.URL.set(span, request.getRequestURL().toString());
         Tags.HTTP.METHOD.set(span, request.getMethod());
-        Tags.HTTP.SERVLET_CONTEXT_PATH.set(span, request.getContextPath());
-        Tags.HTTP.SERVLET_PATH.set(span, getServletPath(request));
-        Tags.HTTP.SERVLET_PATH_INFO.set(span, request.getPathInfo());
         span.setComponent(getComponentsDefine());
         SpanLayer.asHttp(span);
 
@@ -135,22 +132,7 @@ public abstract class ServletRequestInterceptor implements InstanceMethodsAround
             Tags.HTTP.PARAMS.set(span, tagValue);
         }
     }
-
-    public String getServletPath(HttpServletRequest request) {
-        String servletPath = (String) request.getAttribute("javax.servlet.include.servlet_path");
-        if (servletPath == null) {
-            servletPath = request.getServletPath();
-        }
-        if (servletPath == null) {
-            return "";
-        }
-        if (servletPath.length() > 1 && servletPath.endsWith("/")) {
-            servletPath = servletPath.substring(0, servletPath.length() - 1);
-        }
-
-        return servletPath;
-    }
-
+    
     protected abstract boolean isCollectHTTPParams();
 
     protected abstract int httpParamsLengthThreshold();
