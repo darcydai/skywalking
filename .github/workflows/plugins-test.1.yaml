@@ -37,7 +37,7 @@ on:
 jobs:
   PluginsTest:
     name: Plugin
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
       matrix:
@@ -61,6 +61,7 @@ jobs:
           - postgresql-above9.4.1207-scenario
           - mssql-jtds-scenario
           - mssql-jdbc-scenario
+          - mybatis-3.x-scenario
     steps:
       - uses: actions/checkout@v2
         with:
